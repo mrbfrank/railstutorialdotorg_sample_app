@@ -10,6 +10,11 @@ describe "Authentication" do
 
     it { should have_selector('h1',    text: 'Sign in') }
     it { should have_selector('title', text: 'Sign in') }
+    
+    it { should_not have_link('Users',    href: users_path) }
+    it { should_not have_link('Profile') }
+    it { should_not have_link('Settings') }
+    it { should_not have_link('Sign out', href: signout_path) }
   end
   
   describe "signin" do
@@ -28,6 +33,7 @@ describe "Authentication" do
       end
     end
     
+    # railstutorial.org Listing 9.5
     describe "with valid information" do
       let(:user) { FactoryGirl.create(:user) }
       before { sign_in user }
@@ -66,6 +72,21 @@ describe "Authentication" do
           it "should render the desired protected page" do
             page.should have_selector('title', text: 'Edit user')
           end
+          
+          # railstutorial.org Exercise 9.6.8
+          describe "when signing in again" do
+            before do
+              delete signout_path
+              visit signin_path
+              fill_in "Email",    with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            it "should render the default (profile) page" do
+              page.should have_selector('title', text: user.name)
+            end
+          end
         end
       end
 
@@ -88,6 +109,27 @@ describe "Authentication" do
         end
       end
     end
+    
+    
+    # railstutorial.org Exercise 9.6.6
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user }
+
+      describe "in the Users controller" do
+
+        describe "submitting a GET request to the Users :new action" do
+          before { get new_user_path }
+          specify { response.should redirect_to(root_path) }
+        end
+
+        describe "submitting a POST request to the Users :create action" do
+          before { post users_path(user) }
+          specify { response.should redirect_to(root_path) }
+        end
+      end
+    end
+    
     
     # railstutorial.org Listing 9.14
     describe "as wrong user" do
@@ -116,6 +158,17 @@ describe "Authentication" do
       describe "submitting a DELETE request to the Users#destroy action" do
         before { delete user_path(user) }
         specify { response.should redirect_to(root_path) }        
+      end
+    end
+    
+    # railstutorial.org Exercise 9.6.9
+    describe "as admin" do
+      let(:admin) { FactoryGirl.create(:admin, admin: true) }
+      before { sign_in admin }
+      describe "submitting a DELETE request to self Users#destroy action" do
+        before { delete user_path(admin) }
+        specify { response.should redirect_to(root_path) }
+      #  it { should have_selector('div.alert.alert-error', text: 'You cannot delete yourself') }
       end
     end
   end

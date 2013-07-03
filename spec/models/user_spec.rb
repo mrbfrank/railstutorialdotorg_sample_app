@@ -32,13 +32,25 @@ describe User do
   # railstutorial.org Listing 9.39
   it { should_not be_admin }
   
+# Verify User model admin attribute can be set (Listing 9.39)  
   describe "with admin attribute set to 'true'" do
     before do
       @user.save!
       @user.toggle!(:admin)
     end
-
     it { should be_admin }
+  end
+  
+# Verify User model admin attribute is NOT accessible (Excercise 9.6.1)
+  describe "accessible attributes" do
+    it "should not allow access to :admin" do
+      expect do
+        User.new(admin: true) 
+      end.to raise_error(ActiveModel::MassAssignmentSecurity::Error)
+      expect do
+        @user.update_attributes(:admin => true)
+      end.to raise_error(ActiveModel::MassAssignmentSecurity::Error)
+    end
   end
 
 # Name validation

@@ -2,6 +2,7 @@ class UsersController < ApplicationController
   before_filter :signed_in_user, only: [:index, :edit, :update, :destroy]   # railstutorial.org Listings 9.12, 9.22, 9.46
   before_filter :correct_user,   only: [:edit, :update]   # railstutorial.org Listing 9.15 (continued below)
   before_filter :admin_user,     only: :destroy           # Listing 9.48
+  before_filter :new_user,  only: [:new, :create]    # Exercise 9.6.6
   
   def show
     @user = User.find(params[:id])
@@ -45,10 +46,17 @@ class UsersController < ApplicationController
   end
   
   # railstutorial.org Listing 9.46
+  # railstutorial.org Exercise 9.6.9
   def destroy
-    User.find(params[:id]).destroy
-    flash[:success] = "User destroyed."
-    redirect_to users_url
+    user = User.find(params[:id])
+    if (current_user == user) && (current_user.admin?)
+      flash[:error] = "You cannot delete yourself."
+      redirect_to root_path
+    else
+      user.destroy
+      flash[:success] = "User destroyed."
+      redirect_to users_url
+    end
   end
   
   # railstutorial.org Listing 9.12
@@ -70,5 +78,10 @@ class UsersController < ApplicationController
     # railstutorial.org Listing 9.48
     def admin_user
       redirect_to(root_path) unless current_user.admin?
+    end
+    
+    # railstutorial.org Exercise 9.6.6
+    def new_user
+      redirect_to(root_path) unless !signed_in?
     end
 end
