@@ -13,6 +13,7 @@ class User < ActiveRecord::Base
   attr_accessible :name, :email, :password, :password_confirmation
   attr_protected :admin
   has_secure_password
+  has_many :microposts, dependent: :destroy
 
   before_save { |user| user.email = email.downcase }
   before_save :create_remember_token  # railstutorial.org Listing 8.18
@@ -23,6 +24,12 @@ class User < ActiveRecord::Base
   validates :password, presence: true, length: { minimum: 6 }
   validates :password_confirmation, presence: true
   after_validation { self.errors.messages.delete(:password_digest) }  # Remove error message "Password digest can't be blank"
+  
+  # railstutorial.org Listing 10.39
+  def feed
+    # This is preliminary. See "Following users" for the full implementation.
+    Micropost.where("user_id = ?", id)
+  end
   
   private
 

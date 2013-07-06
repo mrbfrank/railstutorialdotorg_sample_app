@@ -25,6 +25,14 @@ module SessionsHelper
     user == current_user
   end
   
+  # railstutorial.org Listing 10.27
+  def signed_in_user
+    unless signed_in?
+      store_location
+      redirect_to signin_url, notice: "Please sign in."
+    end
+  end
+  
   # railstutorial.org Listing 8.30
   def sign_out
     self.current_user = nil
